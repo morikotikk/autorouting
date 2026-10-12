@@ -196,12 +196,30 @@ export class MultilayerIjump extends GeneralizedAstarAutorouter {
       )
     }
 
+    // Traces created for other connections on the same net are not obstacles
+    // for this connection, the router must be free to cross or join them
+    const sameNetTraceObstacles = obstaclesFromTraces.filter((obstacle) =>
+      obstacle.connectedTo.includes(bestConnectionId),
+    )
+
     return new ObstacleList3d(
       this.layerCount,
       this.allObstacles
         .filter((obstacle) => !obstacle.connectedTo.includes(bestConnectionId))
-        .concat(obstaclesFromTraces ?? []),
+        .concat(obstaclesFromTraces ?? []).filter(
+          (obstacle) => !sameNetTraceObstacles.includes(obstacle),
+        ),
     )
+  }
+
+  /**
+   * Tag trace obstacles with the net id so later connections on the same net
+   * can filter them out of the obstacle list (see createObstacleList)
+   */
+  getObstacleConnectionId(connection: SimpleRouteConnection): string {
+    return this.connMap
+      ? this.connMap.getNetConnectedToId(connection.name) ?? connection.name
+      : connection.name
   }
 
   computeG(current: Node3d, neighbor: Node3d): number {

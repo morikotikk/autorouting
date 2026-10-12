@@ -343,6 +343,19 @@ export class GeneralizedAstarAutorouter {
   }
 
   /**
+   * The id used to tag obstacles generated from a solved connection's route
+   * and to filter same-net obstacles when creating the obstacle list.
+   *
+   * By default this is the connection name. Solvers with a connectivity map
+   * override this to return the net id instead, so traces created for other
+   * connections on the same net are correctly excluded as obstacles for
+   * later connections on that net.
+   */
+  getObstacleConnectionId(connection: SimpleRouteConnection): string {
+    return connection.name
+  }
+
+  /**
    * By default, this will solve the connections in the order they are given,
    * and add obstacles for each successfully solved connection. Override this
    * to implement "rip and replace" rerouting strategies.
@@ -375,7 +388,7 @@ export class GeneralizedAstarAutorouter {
               y: p.y,
               layer: p.layer ?? dominantLayer,
             })),
-            connection.name,
+            this.getObstacleConnectionId(connection),
           ),
         )
       }
